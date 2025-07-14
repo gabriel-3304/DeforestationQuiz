@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌿 Deforestation Quiz Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="/static/img/vine.png">
+</head>
+<body class="forest-bg">
+
+  <div class="login-wrapper">
+    <div id="login-container" class="glow-box entrance-slide">
+      <h1>🕵️ Forest Defense Protocol</h1>
+      <p class="subtitle">Enter your credentials to infiltrate the quiz vault</p>
+
+      <form id="login-form" autocomplete="off">
+        <div class="input-group">
+          <label for="nameInput">Username</label>
+          <input type="text" id="nameInput" maxlength="15" required />
+        </div>
+
+        <div class="input-group">
+          <label for="passwordInput">Access Code</label>
+          <input type="password" id="passwordInput" required />
+        </div>
+
+        <button type="submit" id="joinBtn">🌱 Enter Forest Network</button>
+      </form>
+
+      <div class="avatar-preview">
+        <p>Your Avatar:</p>
+        <div id="avatarDisplay" class="avatar-glow">🦊</div>
+      </div>
+    </div>
+
+    <div id="message-box" class="message-popup"></div>
+  </div>
+
+  <!-- Audio Effects -->
+  <audio id="login-sound" src="/static/sounds/join.mp3" preload="auto"></audio>
+  <audio id="error-sound" src="/static/sounds/wrong.mp3" preload="auto"></audio>
+  <audio id="forest-sound" src="/static/sounds/forest.mp3" preload="auto" autoplay loop></audio>
+
+  <!-- Scripts -->
+  <script src="{{ url_for('static', filename='socket.io.js') }}"></script>
+  <script>
+    const socket = io();
+    const form = document.getElementById("login-form");
+    const nameInput = document.getElementById("nameInput");
+    const passwordInput = document.getElementById("passwordInput");
+    const joinBtn = document.getElementById("joinBtn");
+    const messageBox = document.getElementById("message-box");
+    const loginSound = document.getElementById("login-sound");
+    const errorSound = document.getElementById("error-sound");
+
+    let playerName = "";
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const name = nameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!name || !password) {
+        showMessage("⚠️ Enter both username and access code.");
+        errorSound.play();
+        return;
+      }
+
+      playerName = name;
+      joinBtn.disabled = true;
+      joinBtn.textContent = "🔍 Verifying...";
+      socket.emit("join", { name, password });
+    });
+
+    socket.on("error", data => {
+      showMessage("🚫 " + data.message);
+      errorSound.play();
+      joinBtn.disabled = false;
+      joinBtn.textContent = "🌱 Enter Forest Network";
+    });
+
+    socket.on("waiting_status", data => {
+      loginSound.play();
+      window.location.href = `/waiting.html?name=${encodeURIComponent(playerName)}`;
+    });
+
+    function showMessage(msg) {
+      messageBox.textContent = msg;
+      messageBox.classList.add("active");
+      setTimeout(() => messageBox.classList.remove("active"), 4000);
+    }
+  </script>
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+</body>
+</html>
